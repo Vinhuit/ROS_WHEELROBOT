@@ -1,0 +1,83 @@
+<launch>
+<arg name="simulation" default="$(optenv TURTLEBOT_SIMULATION false)"/>
+<param name="/use_sim_time" value="$(arg simulation)"/>
+<param name="robot/name" value="$(optenv ROBOT turtlebot)"/>
+<param name="robot/type" value="turtlebot"/>
+<node name="robot_state_publisher" pkg="robot_state_publisher"
+type="robot_state_publisher">
+<param name="publish_frequency" type="double" value="5.0" />
+</node>
+	<!-- Load the TortoiseBot URDF model into the parameter server -->
+<param name="robot_description" textfile="$(find create_urdf)urdf/tao_moi.urdf" />
+
+
+  <rosparam param="base_width">0.3</rosparam>
+  <rosparam param="ticks_meter">14865</rosparam>
+  <node name="launchpad_node" pkg="create_urdf" type="launchpad_node.py">
+    <rosparam file="$(find create_urdf)/param/board_config.yaml" command="load" />
+  </node>
+<node name="map_server" pkg="map_server" type="map_server"
+args="$(find create_urdf)/maps/willow.yaml"/>
+
+<include file="$(find amcl)/examples/amcl_diff.launch"/>
+<!-- <include file="$(find gazebo_ros)/launch/willowgarage_world.launch"/> -->
+<!-- Spawn a TortoiseBot in Gazebo, taking the description from the
+parameter server -->
+
+<node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model"
+args="-param robot_description -urdf -model tortoisebot -x 8 -y -8" />
+
+  <node name="lpid_velocity" pkg="create_urdf" type="pid_velocity.py" output="screen">
+      <remap from="wheel" to="lwheel"/>
+      <remap from="motor_cmd" to="left_wheel_speed"/>
+      <remap from="wheel_vtarget" to="lwheel_vtarget"/>
+      <remap from="wheel_vel" to="lwheel_vel"/>
+    
+      <rosparam param="Kp">400</rosparam>
+      <rosparam param="Ki">100</rosparam>
+      <rosparam param="Kd">0</rosparam>
+      <rosparam param="out_min">-1023</rosparam>
+      <rosparam param="out_max">1023</rosparam>
+      <rosparam param="rate">30</rosparam>
+      <rosparam param="timeout_ticks">4</rosparam>
+      <rosparam param="rolling_pts">5</rosparam>
+
+  </node>
+
+  <node name="rpid_velocity" pkg="create_urdf" type="pid_velocity.py" output="screen">
+      <remap from="wheel" to="rwheel"/>
+      <remap from="motor_cmd" to="right_wheel_speed"/>
+      <remap from="wheel_vtarget" to="rwheel_vtarget"/>
+      <remap from="wheel_vel" to="rwheel_vel"/>
+      <rosparam param="Kp">400</rosparam>
+      <rosparam param="Ki">100</rosparam>
+      <rosparam param="Kd">0</rosparam>
+      <rosparam param="out_min">-1023</rosparam>
+      <rosparam param="out_max">1023</rosparam>
+      <rosparam param="rate">30</rosparam>
+      <rosparam param="timeout_ticks">4</rosparam>
+      <rosparam param="rolling_pts">5</rosparam>
+
+
+
+ </node>
+
+
+<node pkg="create_urdf" type="twist_to_motors.py" name="twist_to_motors" output="screen"/>
+<node pkg="create_urdf" type="diff_tf.py" name="diff_tf" output="screen"/> 
+
+<node pkg="move_base" type="move_base" respawn="false" name="move_base"
+output="screen">
+<rosparam file="$(find create_urdf)param/costmap_common_params.yaml"
+command="load" ns="global_costmap" />
+<rosparam file="$(find create_urdf)param/costmap_common_params.yaml"
+command="load" ns="local_costmap" />
+<rosparam file="$(find create_urdf)param/local_costmap_params.yaml"
+command="load" />
+<rosparam file="$(find create_urdf)param/global_costmap_params.yaml"
+command="load" />
+<rosparam file="$(find create_urdf)param/base_local_planner_params.yaml"
+command="load" />
+</node>
+	<node name="rviz" pkg="rviz" type="rviz" args="-d $(find urdf_tutorial)/urdf.rviz" required="true" />
+</launch>

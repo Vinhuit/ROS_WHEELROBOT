@@ -1,0 +1,41 @@
+<launch>
+<!-- Load the create_urdf URDF model into the parameter server -->
+<param name="robot_description" textfile="$(find create_urdf)urdf/tao_moi.urdf" />
+<!-- Start Gazebo with an empty world -->
+<include file="$(find gazebo_ros)/launch/willowgarage_world.launch"/>
+
+<include file="$(find amcl)/examples/amcl_diff.launch"/>
+
+
+<node name="map_server" pkg="map_server" type="map_server"
+args="$(find create_urdf)/maps/willow.yaml"/>
+
+<!-- Spawn a create_urdf in Gazebo, taking the description from the
+parameter server -->
+<node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model"
+args="-param robot_description -urdf -model tortoisebot -x 8 -y -8" />
+
+<node name="joint_state_publisher" pkg="joint_state_publisher"
+type="joint_state_publisher" >
+</node>
+<!-- start robot state publisher -->
+<node pkg="robot_state_publisher" type="state_publisher"
+name="robot_state_publisher" output="screen" >
+
+<param name="publish_frequency" type="double" value="50.0" />
+</node>
+<node name="rviz" pkg="rviz" type="rviz" args="-d $(find urdf_tutorial)/urdf.rviz" required="true" />
+<node pkg="move_base" type="move_base" respawn="false" name="move_base"
+output="screen">
+<rosparam file="$(find create_urdf)param/costmap_common_params.yaml"
+command="load" ns="global_costmap" />
+<rosparam file="$(find create_urdf)param/costmap_common_params.yaml"
+command="load" ns="local_costmap" />
+<rosparam file="$(find create_urdf)param/local_costmap_params.yaml"
+command="load" />
+<rosparam file="$(find create_urdf)param/global_costmap_params.yaml"
+command="load" />
+<rosparam file="$(find create_urdf)param/base_local_planner_params.yaml"
+command="load" />
+</node>
+</launch>

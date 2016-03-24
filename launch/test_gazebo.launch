@@ -1,0 +1,25 @@
+<launch>
+<!-- Load the create_urdf URDF model into the parameter server -->
+<param name="robot_description" textfile="$(find create_urdf)urdf/tao_moi.urdf" />
+<!-- Start Gazebo with an empty world -->
+<include file="$(find gazebo_ros)/launch/empty_world.launch"/>
+<!-- Spawn a TortoiseBot in Gazebo, taking the description from the
+parameter server -->
+<node name="spawn_urdf" pkg="gazebo_ros" type="spawn_model"
+args="-param robot_description -urdf -model tortoisebot" />
+
+<!-- <node pkg="openni_camera" type="openni_node" name="openni_camera" output="screen" respawn="true" >
+    <param name="device_type" value="1" />
+    <param name="registration_type" value="1" />
+    <param name="point_cloud_resolution" value="1" />
+    <param name="openni_depth_optical_frame" value="kinect_depth_optical_frame" />
+    <param name="openni_rgb_optical_frame" value="kinect_rgb_optical_frame" />
+    <param name="image_input_format" value="5" />
+    
+  </node> -->
+ 
+<!-- start robot state publisher -->
+<node name="robot_state_publisher" pkg="robot_state_publisher"
+type="robot_state_publisher"/>
+
+</launch>

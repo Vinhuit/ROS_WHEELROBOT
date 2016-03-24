@@ -1,0 +1,5 @@
+#!/bin/bash
+clear
+urdf_to_graphiz tao_moi.urdf 
+roslaunch create_urdf show_taomoi.launch model:="tao_moi.urdf"
+
